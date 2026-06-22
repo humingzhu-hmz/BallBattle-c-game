@@ -1,5 +1,6 @@
 #include "GameScene.h"
 #include "../collision/CollisionManager.h"
+#include "../player/CharacterHandle.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include <random>
@@ -7,7 +8,7 @@ GameScene::GameScene(QWidget *parent)
     : Scene(parent),
     gameMap(5000.0f, 4000.0f,1240.0f,880.0f),
     spatialGrid(5000.0f, 4000.0f, 200.0f),
-    player(2500.0f, 2000.0f,400.0f,400.0f,10,Qt::red),
+    player(2500.0f, 2000.0f,400.0f,400.0f,2,Qt::red,"Rain"),
     aiManager(3),
     camera(2500.0f, 2000.0f,1.0f),
     mouseScreenX(960.0f),
@@ -111,6 +112,10 @@ void GameScene::gameLoop() {
 
 
     // 【手写纯数学转换】：屏幕坐标转世界坐标
+    if (player.getlifeCount() <= 0) {
+        // 让游戏停在这一帧，只允许 paintEvent 刷新静态的 GAME OVER 画面
+        return;
+    }
     currentScale = camera.getScale();
     mouseWorldX = (mouseScreenX - halfW) / currentScale + camera.getX();
     mouseWorldY = (mouseScreenY - halfH) / currentScale + camera.getY();
@@ -268,11 +273,38 @@ void GameScene::paintEvent(QPaintEvent *event) {
         }
     }
 
-    // C. 绘制主体（确保传入的 currentScale 参与了下面的内部手写公式计算）
-    gameMap.draw(camX, camY, scrw,scrh,currentScale, painter);
-    foodManager.draw(camX, camY, scrw,scrh, currentScale, painter);
+    // C. 绘制主体（世界坐标系，受 currentScale 变焦影响）
+    gameMap.draw(camX, camY, scrw, scrh, currentScale, painter);
+    foodManager.draw(camX, camY, scrw, scrh, currentScale, painter);
+
+    // 1️⃣ 先绘制刺球与玩家子球的身体
     drawVirusAndPlayer(camX, camY, currentScale, painter);
-    ejectedMassManager.draw(camX, camY, scrw ,scrh ,currentScale,painter);
+
+    // 🎯 ✨【文字管理器切入点 1：球心名字渲染】
+    // 在这里调用，因为此时绘制矩阵/状态属于主体层。
+    // 注意：由于你的 drawBallText 内部直接读了 mainBall->getX() 世界坐标，
+    // 为了让名字完美对齐屏幕上的球，我们需要在调用前让 painter 应用相机的变换矩阵，
+    // 或者如果你更习惯在 CharacterHandle 内部做转换，直接把画笔交给它。
+    // 这里我们先save，然后平移缩放画笔，让坐标轴跟世界坐标重合，这样 drawBallText 内部直接画世界坐标就百分百精准了！
+    painter.save();
+    painter.translate(halfW, halfH); // 平移到屏幕中心
+    painter.scale(currentScale, currentScale); // 缩放视野
+    painter.translate(-camX, -camY); // 锚定相机世界位置
+
+    // 传入你的玩家对象指针（假设对象或指针叫 &player 或 player 指针，根据你的具体定义调整）
+    CharacterHandle::drawBallText(painter, &player);
+    // 如果你有 AI 玩家管理器，也可以在此处遍历 AI 绘制名字：
+    // for(auto* ai : aiManager.getAIPlayers()) { CharacterHandle::drawBallText(painter, ai); }
+    painter.restore();
+
+    ejectedMassManager.draw(camX, camY, scrw, scrh, currentScale, painter);
+
+    // D. 绘制 UI 固顶层（屏幕坐标系，不受 currentScale 和相机平移影响）
+
+    // 2️⃣ ✨【文字管理器切入点 2：屏幕左上角状态看板】
+    // 它属于屏幕绝对UI，不随镜头放大缩小，直接传屏幕的宽和高
+    CharacterHandle::drawScreenHUD(painter, &player, width(), height());
+
     // E. 右上角 HUD 小地图强制置顶渲染（保持不变，小地图不需要变焦）
     float miniMapSize = 180.0f;
     float miniMapX = width() - miniMapSize - 40.0f;
@@ -292,4 +324,10 @@ void GameScene::paintEvent(QPaintEvent *event) {
     painter.setPen(Qt::NoPen);
     painter.setBrush(Qt::green);
     painter.drawEllipse(QPointF(playerMiniX, playerMiniY), 5.0f, 5.0f);
+
+    // 3️⃣ ✨【文字管理器切入点 3：游戏结束大结算提示】
+    // 必须放在最后渲染，确保它的半透明红黑色滤镜能把背后的地图、小地图全部盖住，实现完美的“全屏霸屏宣告”
+    if (!player.getlifeStatue() || player.getlifeCount() <= 0) {
+        CharacterHandle::drawGameOverSummary(painter, &player, width(), height());
+    }
 }

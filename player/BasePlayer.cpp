@@ -312,6 +312,8 @@ float BasePlayer::getMaxBallMass() {
     }
     return maxMass;
 }
+QString BasePlayer::getName() const{ return name;}
+void BasePlayer::setName(QString newName) { name=newName; }
 void BasePlayer::updateMassDecay(float deltaTime)
 {
     auto& playerBalls = this->getBalls();

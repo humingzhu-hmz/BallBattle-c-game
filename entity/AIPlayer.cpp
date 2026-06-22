@@ -5,6 +5,7 @@
 AIPlayer::AIPlayer(float startX, float startY, float startMass, float speed, QColor color)
     : BasePlayer(startX, startY, startMass, speed, color) {}
 
+int AIPlayer::getlifeCount() {return 0;}
 void AIPlayer::updateAI(float deltaTime, FoodManager& foodManager,float mapWidth,float mapHeight) {
     if(getlifeStatue()==false)
     {

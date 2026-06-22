@@ -2,6 +2,7 @@
 #include <vector>
 #include "Ball.h" // 👈 核心修改：让编译器完整看清父类的模样，直接包含它！
 #include <cmath>
+#include <cstring>
 class EjectedMass;
 // ========================================================
 // 1. 专属于玩家/AI、具备运动天赋的子球
@@ -67,6 +68,7 @@ private:
     float minRadius;
     bool lifeStatue;
     QColor color;// 玩家的颜色
+    QString name;
     static int counts;
     void applyMassDecay(float deltaTime);
 public:
@@ -93,7 +95,9 @@ public:
     // ✨ 新增：所有玩家（真实玩家与AI）共有的质量衰减逻辑
     void updateMassDecay(float deltaTime);
     void split(float targetX,float targetY);
-
+    QString getName() const ;
+    void setName(QString name);
+    virtual int getlifeCount() =0;
     // 加上 & 符号，改成引用传递
     void eject(float targetX, float targetY, std::vector<EjectedMass*>& masses);
     void merge(float deltaTime);

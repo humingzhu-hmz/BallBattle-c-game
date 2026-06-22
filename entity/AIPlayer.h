@@ -8,7 +8,7 @@ public:
     AIPlayer(float startX, float startY, float startMass, float speed, QColor color);
 
     virtual ~AIPlayer() = default;
-
+    virtual int getlifeCount() override;
     // ✨【重写/重载决策层】：AI 真正的每帧思考入口，需要把环境（食物）传给它
     void updateAI(float deltaTime, FoodManager& foodManager,float mapWidth,float mapHeight);
 };

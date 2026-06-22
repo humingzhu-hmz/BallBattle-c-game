@@ -1,8 +1,8 @@
 #include "Player.h"
 #include <QDebug>
 #include "../map/Camera.h"
-Player::Player(float startX, float startY, float startMass, float speed,int lifeCount, QColor color)
-    : BasePlayer(startX, startY, startMass, speed, color),lifeCount(lifeCount) {};
+Player::Player(float startX, float startY, float startMass, float speed,int lifeCount, QColor color,QString name)
+    : BasePlayer(startX, startY, startMass, speed, color),lifeCount(lifeCount) {setName(name);};
 int Player::getlifeCount()
 {
     return lifeCount;

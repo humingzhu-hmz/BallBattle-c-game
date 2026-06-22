@@ -113,8 +113,8 @@ void GameScene::gameLoop() {
 
     // 【手写纯数学转换】：屏幕坐标转世界坐标
     currentScale = camera.getScale();
-    float mouseWorldX = (mouseScreenX - halfW) / currentScale + camera.getX();
-    float mouseWorldY = (mouseScreenY - halfH) / currentScale + camera.getY();
+    mouseWorldX = (mouseScreenX - halfW) / currentScale + camera.getX();
+    mouseWorldY = (mouseScreenY - halfH) / currentScale + camera.getY();
 
     // 1. 玩家和 AI 更新
     player.updatePlayer(0.016f, mouseWorldX, mouseWorldY, mapw, maph);
@@ -199,7 +199,25 @@ void GameScene::gameLoop() {
     //qDebug() << "player myball size"<<player.getBalls().size();
     update();
 }
+void GameScene::keyPressEvent(QKeyEvent* event)
+{
+    if(event->key() == Qt::Key_Space)
+    {
+        qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
+        player.split(mouseWorldX,mouseWorldY);
+        qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
+    }
+}
+void GameScene::mousePressEvent(QMouseEvent* event)
+{
+    if(event->button() == Qt::RightButton)
+    {
+        qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
+        player.split(mouseWorldX,mouseWorldY);
+        qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
+    }
 
+}
 void GameScene::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);

@@ -289,7 +289,7 @@ void BasePlayer::draw(float cameraX, float cameraY, float screenWidth, float scr
 // ========================================================
 
 // 1. 获取玩家所有分裂子球的总质量总和
-float BasePlayer::getSumMass() const {
+float BasePlayer::getSumMass() {
     float totalMass = 0.0f;
     for (Ball* ball : myBalls) {
         if (ball) { // 严谨保护：防止空指针
@@ -300,7 +300,7 @@ float BasePlayer::getSumMass() const {
 }
 
 // 2. ✨【独立相机视野驱动核心】：获取当前体积/质量最大的那一颗球的质量
-float BasePlayer::getMaxBallMass() const {
+float BasePlayer::getMaxBallMass() {
     if (myBalls.empty()) return 400.0f; // 如果没球，返回初始保底质量
 
     float maxMass = 0.0f;

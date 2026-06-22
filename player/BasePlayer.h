@@ -82,8 +82,8 @@ public:
     float getCenterX() ;
     float getCenterY() ;
     bool getlifeStatue();
-    float getSumMass() const;       // 获取当前玩家总质量
-    float getMaxBallMass() const;   // 获取当前玩家最大子球质量
+    float getSumMass() ;       // 获取当前玩家总质量
+    float getMaxBallMass() ;   // 获取当前玩家最大子球质量
     float getMinRadius();
     void  spawnPlayer(float mapWidth,float mapHeight);
     void  draw(float cameraX, float cameraY, float screenWidth, float screenHeight,float scale, QPainter& painter);

@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <QTimer>
 #include <vector>
+#include <QKeyEvent>
 
 // 引入大管家配置
 #include "../map/GameMap.h"
@@ -11,6 +12,7 @@
 #include "../entity/VirusManager.h"
 #include "../entity/AIManager.h"
 #include "../collision/SpatialGrid.h"
+#include "../operate/OperateManager/OperateManager.h"
 // 结构体声明
 struct BackgroundStar {
     float worldX;
@@ -41,6 +43,8 @@ private:
     SpatialGrid spatialGrid;
     float mouseScreenX;
     float mouseScreenY;
+    float mouseWorldX;
+    float mouseWorldY;
     float mapw,maph,scrw,scrh;
     float currentScale;
     float halfW;
@@ -54,6 +58,8 @@ public:
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
     void drawVirusAndPlayer(float camx,float camy,float currentScale,QPainter& painter);
     void gameLoop();
 };

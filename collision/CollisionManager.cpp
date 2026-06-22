@@ -209,6 +209,13 @@ void CollisionManager::checkSelfPushback(BasePlayer& anyPlayer) {
             Ball* ballB = playerBalls[j];
             if (!ballB) continue;
 
+            // 🎯 ✨【合体过滤核心】：
+            // 如果两颗球都过了合体 CD，说明它们已经获准融合了！
+            // 此时直接跳过这段“硬挤开”的物理逻辑，放任它们向彼此重叠，从而完美触发 checkAndMerge 的吸入动画
+            if (ballA->canMerge() && ballB->canMerge()) {
+                continue;
+            }
+
             // 1. 计算两个子球的中心点距离
             float dx = ballB->getX() - ballA->getX();
             float dy = ballB->getY() - ballA->getY();
@@ -261,5 +268,63 @@ void CollisionManager::checkSelfPushback(BasePlayer& anyPlayer) {
                 cBallB->applyExplosionPush(nx * pushForceB, ny * pushForceB);
             }
         }
+    }
+}
+void CollisionManager::checkPlayerVsEjectedMass(BasePlayer& player, EjectedMassManager& massManager, SpatialGrid& grid)
+{
+    auto& playerBalls = player.getBalls();
+    auto& allMasses = massManager.getMasses();
+    std::vector<EjectedMass*> toRemove;
+
+    for (Ball* ball : playerBalls)
+    {
+        if (!ball) continue;
+
+        float ballX = ball->getX();
+        float ballY = ball->getY();
+        float ballR = ball->getRadius();
+
+        // 🔍 【适配你的网格接口】：直接把当前的玩家子球指针丢进去
+        std::vector<GridNode> nearbyNodes = grid.getNearby(ball);
+
+        for (const GridNode& node : nearbyNodes)
+        {
+            // 这里的 node.ball 或者是 node.entity（请根据你 GridNode 的具体成员名微调，通常是存储了 Ball* 指针）
+            Ball* entity = node.ball;
+            if (!entity) continue;
+
+            // 只处理孢子类型
+            if (entity->getType() != TYPE_EJECTED_MASS)
+                continue;
+
+            EjectedMass* mass = static_cast<EjectedMass*>(entity);
+
+            // 如果这个孢子已经被其他分身预定吃掉了，跳过
+            if (std::find(toRemove.begin(), toRemove.end(), mass) != toRemove.end())
+                continue;
+
+            // 计算碰撞距离
+            float dx = mass->getX() - ballX;
+            float dy = mass->getY() - ballY;
+            float distance = std::sqrt(dx * dx + dy * dy);
+
+            // 吞噬判定
+            if (distance < ballR && ball->getMass() > mass->getMass() * 1.2f)
+            {
+                ball->addMass(mass->getMass()); // 内部自动 recalculateRadius()
+                toRemove.push_back(mass);
+            }
+        }
+    }
+
+    // 🧼 统一销毁被吃掉的孢子内存与容器节点
+    for (EjectedMass* massToDelete : toRemove)
+    {
+        auto it = std::find(allMasses.begin(), allMasses.end(), massToDelete);
+        if (it != allMasses.end())
+        {
+            allMasses.erase(it);
+        }
+        delete massToDelete;
     }
 }

@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm> // 记得在 cpp 顶部包含
 #include <QDebug>
+#include "../operate/OperateManager//OperateManager.h"
 // ========================================================
 // ControllableBall（会动的球）实现
 // ========================================================
@@ -23,7 +24,7 @@ void ControllableBall::update(float deltaTime, float targetX, float targetY) {
 
     if (distance > 1.0f) {
         // 核心物理参数
-        float initialSpeed = 800.0f;
+        float initialSpeed = 600.0f;
         float speedFloor = 400.0f;
         float speedDecayExponent = 0.5f;
 
@@ -311,6 +312,42 @@ float BasePlayer::getMaxBallMass() {
     }
     return maxMass;
 }
+void BasePlayer::updateMassDecay(float deltaTime)
+{
+    auto& playerBalls = this->getBalls();
+
+    constexpr float BASE_MASS = 400.0f;       // 初始低保质量
+    constexpr float BASE_DECAY_RATE = 0.002f;  // 基础流失率
+
+    for (Ball* ball : playerBalls)
+    {
+        if (!ball) continue;
+
+        float currentMass = ball->getMass();
+        if (currentMass <= BASE_MASS) continue; // 低保质量不衰减
+
+        // 🎯 幂函数动态流失率
+        float scaleFactor = std::pow(currentMass / BASE_MASS, 0.4f);
+        float dynamicRate = BASE_DECAY_RATE * scaleFactor;
+
+        // 限制单秒流失率上限（每秒最多流失当前质量的 8%）
+        if (dynamicRate > 0.08f) {
+            dynamicRate = 0.08f;
+        }
+
+        // 计算当前帧流失的绝对质量
+        float massToLose = currentMass * dynamicRate * deltaTime;
+
+        // 执行扣除并兜底
+        float newMass = currentMass - massToLose;
+        if (newMass < BASE_MASS) {
+            newMass = BASE_MASS;
+        }
+
+        ball->setMass(newMass);
+    }
+}
+QColor BasePlayer::getColor() const { return color;}
 void BasePlayer::explodeBall(int ballIndex, Ball* virus) {
     // 🛡️ 安全检查：防止索引越界或空指针
     if (ballIndex < 0 || ballIndex >= static_cast<int>(myBalls.size()) || !virus) return;
@@ -338,24 +375,34 @@ void BasePlayer::explodeBall(int ballIndex, Ball* virus) {
     int maxAllowedNewPieces = 16 - static_cast<int>(myBalls.size());
     int maxPieces = std::min(10, maxAllowedNewPieces + 1); // 最多炸出 10 个
 
-    float minPieceMass = 400.0f; // 碎球保底质量
-    int pieceCount = static_cast<int>(originalMass / minPieceMass);
+    // 🎯 ✨【核心修改 1】：设定炸刺的基础惩罚时间
+    // 既然你设定 2 秒，那我们给被炸出来的碎球和留下的母球统一硬灌 2 秒 CD！
+    float punishCooldown = 2.0f;
 
+    // 🎯 ✨【核心修改 2】：随机数量 5 - 8 个碎球
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> randPieceCount(5, 8); // 随机生成 5-8 颗球
+    int pieceCount = randPieceCount(gen);
+
+    // 如果原球由于质量或者 16 颗球的上限限制，无法炸出这么多，做一层裁剪防御
     if (pieceCount > maxPieces) pieceCount = maxPieces;
 
     // 如果大球本身质量太小，不够分裂成两颗球，也直接当食物吃掉
-    if (pieceCount < 2) {
+    float minPieceMass = originalMass / pieceCount;
+    if (pieceCount < 2 || minPieceMass < 100.0f) { // 加一层低保质量防碎成渣
         oldBall->addMass(virus->getMass());
         return;
     }
 
-    // 质量守恒：原地球体积瞬间缩水
+    // 质量守恒：原球体积瞬间缩水
     float newMass = originalMass / pieceCount;
     oldBall->setMass(newMass);
 
+    // ⚡ 【致命 BUG 修复】：母球在炸裂之后，必须立刻被重新灌入冷却 CD！
+    oldBall->setMergeCooldown(punishCooldown);
+
     // 随机一个初始偏角，让每次爆炸的碎球方向不僵硬
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_real_distribution<float> randAngle(0.0f, 2.0f * 3.1415926f);
     float startAngleOffset = randAngle(gen);
 
@@ -377,10 +424,29 @@ void BasePlayer::explodeBall(int ballIndex, Ball* virus) {
         // 统一创建具备物理位移和控制能力的 ControllableBall
         ControllableBall* newPiece = new ControllableBall(spawnX, spawnY, newMass, this->initSpeed, ballColor);
 
+        // ⚡ 【致命 BUG 修复】：爆出来的每一颗新子球，一出生必须强行焊死 2 秒 CD！
+        newPiece->setMergeCooldown(punishCooldown);
+
         // 💥 注入瞬间冲力速度
         newPiece->applyExplosionPush(pVx, pVy);
 
         // 稳稳塞进大管家自己的容器里
         myBalls.push_back(newPiece);
     }
+}
+// 1. 分裂逻辑
+void BasePlayer::split(float targetX, float targetY)
+{
+    OperateManager::split(this, targetX, targetY);
+}
+
+// 2. 🎯 ✨【彻底清爽】：直接一行透传，看着极度舒适！
+void BasePlayer::merge(float deltaTime)
+{
+    // 🎯 直接调用我们新写的、完全适配公开接口的合体判定函数
+    OperateManager::checkAndMerge(this, deltaTime);
+}
+void BasePlayer::eject(float targetX, float targetY, std::vector<EjectedMass*>& masses)
+{
+    OperateManager::eject(this,targetX,targetY,masses);
 }

@@ -7,8 +7,8 @@ GameScene::GameScene(QWidget *parent)
     : Scene(parent),
     gameMap(5000.0f, 4000.0f,1240.0f,880.0f),
     spatialGrid(5000.0f, 4000.0f, 200.0f),
-    player(2500.0f, 2000.0f,400.0f,500.0f,10,Qt::red),
-    aiManager(8),
+    player(2500.0f, 2000.0f,400.0f,400.0f,10,Qt::red),
+    aiManager(3),
     camera(2500.0f, 2000.0f,1.0f),
     mouseScreenX(960.0f),
     mouseScreenY(540.0f),
@@ -65,7 +65,6 @@ void GameScene::drawVirusAndPlayer(float camX,float camY,float currentScale,QPai
     // 3. ✨【统一收集】：利用已在头文件中声明好的 allLivePlayersBalls，避免每帧分配内存造成的卡顿
 
     allLivePlayersBalls.clear();
-
     // 收集人类玩家的子球
     for (Ball* b : player.getBalls()) {
         if (b && b->getMass() > 0) allLivePlayersBalls.push_back(b);
@@ -121,7 +120,8 @@ void GameScene::gameLoop() {
     aiManager.updateAllAI(0.016f, foodManager, mapw, maph);
     foodManager.update(mapw, maph);
     virusManager.update(mapw, maph);
-
+    //更新袍子
+    ejectedMassManager.update(0.016f, mapw, maph);
     // 设置目标点为玩家中心
     camera.setTarget(player.getCenterX(), player.getCenterY());
 
@@ -160,14 +160,19 @@ void GameScene::gameLoop() {
     for (AIPlayer* ai : aiManager.getAIPlayers()) {
         if (ai) allPlayers.push_back(ai);
     }
-
+    // 🎯 ✨【在这里接入】：让所有人在进入下一轮碰撞和网格索引前，统一进行质量自然衰减
+    for (BasePlayer* p : allPlayers) {
+        if (p) {
+            p->updateMassDecay(0.016f); // 无论是人类还是AI，百万质量在这一步都会被非线性抽干！
+            p->merge(0.016f);
+        }
+    }
     // 将所有玩家【已经经过物理推挤、完美错开不重叠】的子球填入网格
     for (BasePlayer* p : allPlayers) {
         for (Ball* ball : p->getBalls()) {
             spatialGrid.insert(ball, p);
         }
     }
-
     // 将所有食物填入网格
     for (Food* food : foodManager.getFoods()) {
         spatialGrid.insert(food, nullptr); // 食物没有 Owner，传 nullptr
@@ -178,6 +183,12 @@ void GameScene::gameLoop() {
         spatialGrid.insert(v, nullptr); // 刺球也没有 Owner
     }
 
+    // ✨ 新增：将所有玩家吐出来的孢子也填入空间网格
+    for (EjectedMass* mass : ejectedMassManager.getMasses()) {
+        if (mass) {
+            spatialGrid.insert(mass, nullptr); // 孢子也是公共物体，Owner 传 nullptr
+        }
+    }
     // 【步骤 2】：执行碰撞检测（使用网格引擎）
 
     // 1. 人类玩家的碰撞检测
@@ -186,6 +197,11 @@ void GameScene::gameLoop() {
     // qDebug()<<"2";
     CollisionManager::checkPlayerVsVirus(player, virusManager, spatialGrid); // 撞击发生时触发 explodeBall
 
+    CollisionManager::checkPlayerVsEjectedMass(player, ejectedMassManager, spatialGrid);
+
+    for (AIPlayer* ai : aiManager.getAIPlayers()) {
+        if (ai) CollisionManager::checkPlayerVsEjectedMass(*ai, ejectedMassManager, spatialGrid);
+    }
     // 2. AI 的碰撞检测（含 AI 吃食物、撞刺、以及 AI 之间的互吃）
     for (AIPlayer* ai : aiManager.getAIPlayers()) {
         if (!ai) continue;
@@ -203,18 +219,24 @@ void GameScene::keyPressEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Space)
     {
-        qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
+        //qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
         player.split(mouseWorldX,mouseWorldY);
-        qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
+        //qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
+    }
+    if(event->key() == Qt::Key_W)
+    {
+        //qDebug() << "eject"<<player.getSumMass()<<player.getBalls().size();
+        player.eject(mouseWorldX,mouseWorldY,ejectedMassManager.getMasses());
+        //qDebug() << "after eject"<<player.getSumMass()<<player.getBalls().size();
     }
 }
 void GameScene::mousePressEvent(QMouseEvent* event)
 {
     if(event->button() == Qt::RightButton)
     {
-        qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
+        //qDebug() << "split"<<player.getSumMass()<<player.getBalls().size();
         player.split(mouseWorldX,mouseWorldY);
-        qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
+        //qDebug() << "after split"<<player.getSumMass()<<player.getBalls().size();
     }
 
 }
@@ -247,10 +269,10 @@ void GameScene::paintEvent(QPaintEvent *event) {
     }
 
     // C. 绘制主体（确保传入的 currentScale 参与了下面的内部手写公式计算）
-    gameMap.draw(camX, camY, width(), height(), currentScale, painter);
-    foodManager.draw(camX, camY, width(), height(), currentScale, painter);
+    gameMap.draw(camX, camY, scrw,scrh,currentScale, painter);
+    foodManager.draw(camX, camY, scrw,scrh, currentScale, painter);
     drawVirusAndPlayer(camX, camY, currentScale, painter);
-
+    ejectedMassManager.draw(camX, camY, scrw ,scrh ,currentScale,painter);
     // E. 右上角 HUD 小地图强制置顶渲染（保持不变，小地图不需要变焦）
     float miniMapSize = 180.0f;
     float miniMapX = width() - miniMapSize - 40.0f;

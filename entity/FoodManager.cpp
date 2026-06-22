@@ -50,7 +50,7 @@ void FoodManager::spawnFood(float mapWidth, float mapHeight) {
         std::uniform_real_distribution<float> distX(15.0f, mapWidth - 15.0f);
         std::uniform_real_distribution<float> distY(15.0f, mapHeight - 15.0f);
         std::uniform_int_distribution<int>    distColor(50, 255);
-        std::uniform_int_distribution<int>    distMass(100,800);
+        std::uniform_int_distribution<int>    distMass(50,100);
 
         while (static_cast<int>(foods.size()) < maxFoodCount) {
             QColor randomColor(distColor(gen), distColor(gen), distColor(gen));

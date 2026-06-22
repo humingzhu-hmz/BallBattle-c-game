@@ -12,6 +12,7 @@
 #include "../entity/VirusManager.h"
 #include "../entity/AIManager.h"
 #include "../collision/SpatialGrid.h"
+#include "../entity/EjectedMassManager.h"
 #include "../operate/OperateManager/OperateManager.h"
 // 结构体声明
 struct BackgroundStar {
@@ -40,6 +41,7 @@ private:
     QTimer* gameTimer;
     FoodManager foodManager;
     VirusManager virusManager;
+    EjectedMassManager ejectedMassManager;
     SpatialGrid spatialGrid;
     float mouseScreenX;
     float mouseScreenY;

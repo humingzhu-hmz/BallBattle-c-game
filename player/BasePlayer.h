@@ -2,6 +2,7 @@
 #include <vector>
 #include "Ball.h" // 👈 核心修改：让编译器完整看清父类的模样，直接包含它！
 #include <cmath>
+class EjectedMass;
 // ========================================================
 // 1. 专属于玩家/AI、具备运动天赋的子球
 //. 【极致的内存优化】
@@ -21,7 +22,7 @@ class ControllableBall : public Ball {
     float speed;
     float pushVx = 0.0f; // 💥 弹射速度 X 分量
     float pushVy = 0.0f; // 💥 弹射速度 Y 分量
-    float pushDecay = 0.50f; // 惯性衰减系数（每帧乘以 0.85，直到趋近于0）
+    float pushDecay = 0.85f; // 惯性衰减系数（每帧乘以 0.95，直到趋近于0）
 public:
     ControllableBall(float startX, float startY, float startMass = 400.0f,float speed=400.0f,QColor color=Qt::red);
     virtual ~ControllableBall() = default;
@@ -89,5 +90,12 @@ public:
     void  draw(float cameraX, float cameraY, float screenWidth, float screenHeight,float scale, QPainter& painter);
     QColor getColor() const;
     std::vector<Ball*>& getBalls();
+    // ✨ 新增：所有玩家（真实玩家与AI）共有的质量衰减逻辑
+    void updateMassDecay(float deltaTime);
+    void split(float targetX,float targetY);
+
+    // 加上 & 符号，改成引用传递
+    void eject(float targetX, float targetY, std::vector<EjectedMass*>& masses);
+    void merge(float deltaTime);
     void explodeBall(int ballIndex, Ball* virus);
 };

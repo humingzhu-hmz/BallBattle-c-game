@@ -52,7 +52,7 @@ void VirusManager::spawnVirus(float mapWidth, float mapHeight) {
         // 刺球半径大，留出 100 像素边缘，防止卡墙
         std::uniform_real_distribution<float> distX(100.0f, mapWidth - 100.0f);
         std::uniform_real_distribution<float> distY(100.0f, mapHeight - 100.0f);
-        std::uniform_int_distribution<int>    distMass(2500,4800);
+        std::uniform_int_distribution<int>    distMass(2500,3000);
         while (static_cast<int>(viruses.size()) < maxVirusCount) {
             // 刺球初始半径设为 50.0f
             viruses.push_back(new Virus(distX(gen), distY(gen), distMass(gen),Qt::green));

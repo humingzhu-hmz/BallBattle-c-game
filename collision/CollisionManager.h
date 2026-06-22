@@ -2,6 +2,7 @@
 #include "SpatialGrid.h"
 #include "../entity/FoodManager.h"
 #include "../entity/VirusManager.h"
+#include "../entity/EjectedMassManager.h"
 class CollisionManager {
 public:
     // 1. 【底层基石】：纯几何圆形碰撞计算
@@ -20,4 +21,6 @@ public:
     static void checkAllPlayerCollisions(std::vector<BasePlayer*>& allPlayers, SpatialGrid& grid);
     // 6.  处理子球在炸开之后应该排斥一段时间之后的问题,不应该马上合并
     static void checkSelfPushback(BasePlayer& anyPlayer);
+    // ✨ 新增：检测玩家（或 AI）与吐出孢子之间的吞噬碰撞
+    static void checkPlayerVsEjectedMass(BasePlayer& player, EjectedMassManager& massManager, SpatialGrid& grid);
 };

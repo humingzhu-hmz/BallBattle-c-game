@@ -1,6 +1,7 @@
 #pragma once
 #include <Qpainter>
-enum EntityType { TYPE_PLAYER_BALL, TYPE_FOOD, TYPE_VIRUS };
+
+enum EntityType { TYPE_PLAYER_BALL, TYPE_FOOD, TYPE_VIRUS, TYPE_EJECTED_MASS };
 class Ball {
 private:
     float x;          // 世界绝对X坐标
@@ -9,6 +10,9 @@ private:
     float mass;       // 球体质量（核心驱动属性）
     QColor color;
     EntityType type;
+    float mergeCooldown = 0.0f; // 剩余合体冷却时间（秒)
+    // 内部私有函数：质量改变时，自动重新折算视觉半径
+    void recalculateRadius();
 public:
     // 构造函数，默认赋予一个初始质量（比如 400.0f，折算半径就是 20.0f）
     Ball(float startX, float startY, EntityType t, float startMass = 400.0f, QColor color = Qt::white);
@@ -53,7 +57,15 @@ public:
     // 如果在ball里面写speed,绝大多数子类的对象比如food,virus都不需要这个speed,这就是浪费了
     // 所以这里返回空,但是我们要在需要这个speed的子类里面获取这个就必须传一个参数去间接接收它
     virtual void setSpeed(float newspeed) {}; // 修改子类中的speed ,这里的虚实现和上面的update一样作用
-private:
-    // 内部私有函数：质量改变时，自动重新折算视觉半径
-    void recalculateRadius();
+    void setMergeCooldown(float time) { mergeCooldown = time; }
+    float getMergeCooldown() const { return mergeCooldown; }
+    bool canMerge() const { return mergeCooldown <= 0.0f; }
+
+    // 每帧减少 CD 的时间
+    void updateCooldown(float deltaTime) {
+        if (mergeCooldown > 0.0f) {
+            mergeCooldown -= deltaTime;
+        }
+    }
+
 };

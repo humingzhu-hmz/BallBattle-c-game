@@ -26,7 +26,10 @@ float Ball::getX() const { return x; }
 float Ball::getY() const { return y; }
 float Ball::getRadius() const { return radius; }
 float Ball::getMass() const { return mass; }
-void  Ball::setMass(float newMass) {this->mass=newMass;}
+void  Ball::setMass(float newMass) {
+    this->mass=newMass;
+    recalculateRadius();
+}
 QColor Ball::getColor() const { return color ;}
 EntityType Ball::getType() const { return type;}
 void Ball::setPosition(float newX, float newY) {

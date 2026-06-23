@@ -13,7 +13,7 @@ AIManager::~AIManager() {
 void AIManager::spawnAI(float mapWidth, float mapHeight) {
     QColor colors[] = { Qt::green, Qt::blue, Qt::magenta, Qt::cyan, Qt::yellow };
 
-    // ✨ 核心修正：不再一上来就清空容器，而是有多少就保留多少，只补齐差额！
+    // ✨ 补齐差额！
     while (static_cast<int>(aiPlayers.size()) < maxAICount) {
         float rx = static_cast<float>(rand() % static_cast<int>(mapWidth));
         float ry = static_cast<float>(rand() % static_cast<int>(mapHeight));

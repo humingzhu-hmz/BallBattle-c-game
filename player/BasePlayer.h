@@ -5,15 +5,15 @@
 #include <cstring>
 class EjectedMass;
 // ========================================================
-// 1. 专属于玩家/AI、具备运动天赋的子球
-//. 【极致的内存优化】
+// 具备运动天赋的子球
+//.
 //    大地图中随时存在数千个食物豆豆 (Food) 和几十个绿刺球 (Virus)，它们一辈子待在原地，
 //    根本不需要“速度 (speed)”和“跑路逻辑 (update)”。如果直接写在父类 Ball 里面，
 //    这几千个静态物体都会白白携带这些变量，导致内存暴涨。
 //    现在让基类 Ball 只留纯几何属性 (x, y, radius, mass)，而将运动天赋单独剥离给
 //    ControllableBall，做到了全图几千个静态食物的内存零浪费。
 //
-// 2. 【天然而严密的物理限制 (越胖越慢)】
+//
 //   把移动逻辑和速度变量收拢在 ControllableBall 内部，只有玩家和 AI 的球每帧跑路时，
 //    才会去动态计算自己的体重反比速度 (currentSpeed = baseSpeed / radius)。
 //    完美实现了游戏后期大球天然而沉稳的阻尼手感，不需要在外面写恶心的 if(isFood) 判断。
@@ -21,8 +21,8 @@ class EjectedMass;
 // controllableball只比ball多性质一个是speed(可以移动),
 class ControllableBall : public Ball {
     float speed;
-    float pushVx = 0.0f; // 💥 弹射速度 X 分量
-    float pushVy = 0.0f; // 💥 弹射速度 Y 分量
+    float pushVx = 0.0f; // 弹射速度 X 分量
+    float pushVy = 0.0f; // 弹射速度 Y 分量
     float pushDecay = 0.85f; // 惯性衰减系数（每帧乘以 0.95，直到趋近于0）
 public:
     ControllableBall(float startX, float startY, float startMass = 400.0f,float speed=400.0f,QColor color=Qt::red);

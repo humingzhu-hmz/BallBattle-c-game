@@ -10,7 +10,7 @@ void OperateManager::split(BasePlayer* player, float targetX, float targetY)
     if (!player) return;
     auto& balls = player->getBalls();
 
-    // 1. 已经是上限 16 个球，直接拒绝
+    // 上限 16 个球
     if (balls.size() >= 16)
         return;
 
@@ -58,7 +58,7 @@ void OperateManager::split(BasePlayer* player, float targetX, float targetY)
             newX,
             newY,
             newMass,
-            400.0f, // 初始速度或推力系数
+            400.0f, // 初始速度
             player->getColor() // ✨ 适配父类公开接口获取颜色
             );
 

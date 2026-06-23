@@ -19,7 +19,7 @@ Music::Music() {
     m_soundGameBegin.setLoopCount(QSoundEffect::Infinite);
     m_soundEject.setVolume(1.6);
     m_soundMerge.setVolume(1.5);
-    m_soundRespawn.setVolume(2.0f);
+    m_soundRespawn.setVolume(10.0f);
     m_soundGameOver.setVolume(1.0f);
     m_soundSplit.setVolume(1.0f);
     m_soundGameBegin.setVolume(0.5f);

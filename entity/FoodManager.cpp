@@ -2,11 +2,11 @@
 #include <random>
 #include <cmath>
 
-// 构造函数：初始化最大食物数量
+
 FoodManager::FoodManager(int maxCount)
     : maxFoodCount(maxCount) {}
 
-// 析构函数：释放 vector 中动态分配的 Food 内存，防止内存泄漏
+
 FoodManager::~FoodManager() {
     for (Food* f : foods) {
         delete f;
@@ -19,7 +19,6 @@ std::vector<Food*>& FoodManager::getFoods() {
     return foods;
 }
 
-// 被吃掉时，安全释放内存并从容器中移除
 void FoodManager::removeFood(size_t index) {
     if (index < foods.size()) {
         delete foods[index];

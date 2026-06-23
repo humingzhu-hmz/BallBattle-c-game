@@ -28,27 +28,27 @@ void Camera::update(float deltaTime, float mapWidth, float mapHeight, float scre
     x += (targetX - x) * lerpSpeed * deltaTime;
     y += (targetY - y) * lerpSpeed * deltaTime;
 
-    // 2. 动态计算当前视口的半宽和半高
+    // 计算当前视口的半宽和半高
     float halfViewportW = screenWidth / 2.0f;
     float halfViewportH = screenHeight / 2.0f;
 
-    // 3. 动态计算 5% 的自适应黑边缓冲距离
+    // 3. 计算 5% 的自适应黑边缓冲距离
     float padding = screenWidth * 0.05f;
 
-    // 4. 锁死相机边界
+    // 4相机边界
     x = std::max(halfViewportW - padding, std::min(x, mapWidth - halfViewportW + padding));
     y = std::max(halfViewportH - padding, std::min(y, mapHeight - halfViewportH + padding));
 
     // ========================================================
-    // ✨【高阶重构：相机自主控制的非线性缩放逻辑】
+    // 相机自主控制的非线性缩放逻辑】
     // ========================================================
     if (currentTotalMass < 400.0f) currentTotalMass = 400.0f; // 安全保底
 
     // 临界无感区控制：玩家质量变动率超过当前底数的 5% 时，才触发目标视野变更
     if (std::abs(currentTotalMass - lastTriggerMass) / lastTriggerMass > 0.05f) {
 
-        // 采用完美契合大球演变的【对数收拢公式】
-        // 400时为1.0，增重越快缩放拉远越敏感，中后期趋于平缓
+        // 契合大球演变的【对数收拢公式】
+        // 初始质量时为1.0，增重越快缩放拉远越敏感，中后期趋于平缓
         targetScale = 1.0f / (1.0f + 0.35f * std::log(currentTotalMass / 400.0f));
 
         // 视野极限锁死，防止无限拉远导致游戏变像素画

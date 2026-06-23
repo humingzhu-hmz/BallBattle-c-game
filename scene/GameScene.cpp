@@ -63,7 +63,7 @@ GameScene::~GameScene() {
 }
 
 void GameScene::mouseMoveEvent(QMouseEvent *event) {
-    // 完美的 Qt 6 标准写法，警告立刻消失
+    // Qt 6 标准写法，警告立刻消失
     mouseScreenX = static_cast<float>(event->position().x());
     mouseScreenY = static_cast<float>(event->position().y());
     // qDebug()
@@ -72,7 +72,7 @@ void GameScene::mouseMoveEvent(QMouseEvent *event) {
 }
 void GameScene::drawVirusAndPlayer(float camX,float camY,float currentScale,QPainter& painter)
 {
-    // 3. ✨【统一收集】：利用已在头文件中声明好的 allLivePlayersBalls，避免每帧分配内存造成的卡顿
+    // 利用已在头文件中声明好的 allLivePlayersBalls，避免每帧分配内存造成的卡顿
 
     allLivePlayersBalls.clear();
     // 收集人类玩家的子球
@@ -87,14 +87,14 @@ void GameScene::drawVirusAndPlayer(float camX,float camY,float currentScale,QPai
         }
     }
 
-    // 4. 🎯【你的排序精髓】：全场活着的球，先进行一次彻底的“从小到大”大排队
+    // 【你的排序精髓】：全场活着的球，先进行一次彻底的“从小到大”大排队
     std::sort(allLivePlayersBalls.begin(), allLivePlayersBalls.end(), [](Ball* a, Ball* b) {
         return a->getRadius() < b->getRadius();
     });
     float virusThresholdRadius=virusManager.getMinRadius();
-    // 5. 🔥【你的分段交替绘制】：利用刺球半径作为分水岭（假设刺球半径为固定值，比如 65.0f）
+    // 5【分段交替绘制】：利用刺球半径作为分水岭（假设刺球半径为固定值，比如 65.0f）
     size_t i=0;
-    // 🟢 阶段 A：由于已经排好序，直接顺着画，所有【比刺球小】的球会完美从小到大画出来
+    //  阶段 A：由于已经排好序，直接顺着画，所有【比刺球小】的球会完美从小到大画出来
     for (; i < allLivePlayersBalls.size(); ++i) {
         if (allLivePlayersBalls[i]->getRadius() >= virusThresholdRadius) {
             break; // 撞到分水岭，大球留着后面画，暂停循环！
@@ -106,10 +106,10 @@ void GameScene::drawVirusAndPlayer(float camX,float camY,float currentScale,QPai
         allLivePlayersBalls[i]->draw(camX, camY, width(), height(), currentScale, painter);
     }
 
-    // 🟢 阶段 B：把刺球整齐地盖在小球上面。这时候，所有比刺球小的球就被完美“藏”在下面了
+    //  阶段 B：把刺球整齐地盖在小球上面。这时候，所有比刺球小的球就被完美“藏”在下面了
     virusManager.draw(camX, camY, width(), height(), currentScale, painter);
 
-    // 🟢 阶段 C：接着刚才刹车的位置，把剩下的【比刺球大】的球全部画完。它们会完美压住刺球
+    //  阶段 C：接着刚才刹车的位置，把剩下的【比刺球大】的球全部画完。它们会完美压住刺球
     for (; i < allLivePlayersBalls.size(); ++i) {
         allLivePlayersBalls[i]->draw(camX, camY, width(), height(), currentScale, painter);
     }
@@ -128,8 +128,8 @@ void GameScene::gameLoop() {
 
         if (!hasPlayedGameOver) {
             Music::getInstance().stopGameBegin();
-            Music::getInstance().playGameOver(); // 💥 轰隆！在游戏冻结前，优雅地鸣枪谢幕
-            hasPlayedGameOver = true;            // 💥 锁死，下一帧再进来就不会重复播放了
+            Music::getInstance().playGameOver(); //
+            hasPlayedGameOver = true;            //
         }
         // 让游戏停在这一帧，只允许 paintEvent 刷新静态的 GAME OVER 画面
         return;
@@ -157,11 +157,7 @@ void GameScene::gameLoop() {
         scrh,  // 替换掉死板的 scrh
         player.getMaxBallMass()
         );
-    // ========================================================
-    // 🎯 核心插入点：在移动后，立刻执行同队子球物理推挤排斥！
-    // ========================================================
-    // 无论是人类玩家还是 AI，刚炸出来的子球或者在鼠标吸力下聚拢的子球，
-    // 在这里由于距离小于半径之和，会被强行推开并互相施加对抗动量，绝对无法重叠成一个点！
+
 
 
     // 2. 统一由边界裁剪官处理卡位
@@ -171,10 +167,10 @@ void GameScene::gameLoop() {
     }
 
     // ========================================================
-    // 3. 统一碰撞清算（基于空间网格的极速模式）
+    // 3. 统一碰撞清算
     // ========================================================
 
-    // 【步骤 1】：清空并重建网格索引（每一帧都必须重置）
+    // 清空并重建网格索引（每一帧都必须重置）
     spatialGrid.clear();
 
     // 汇总所有玩家
@@ -183,7 +179,7 @@ void GameScene::gameLoop() {
     for (AIPlayer* ai : aiManager.getAIPlayers()) {
         if (ai) allPlayers.push_back(ai);
     }
-    // 🎯 ✨【在这里接入】：让所有人在进入下一轮碰撞和网格索引前，统一进行质量自然衰减
+    // 【在这里接入】：让所有人在进入下一轮碰撞和网格索引前，统一进行质量自然衰减
     for (BasePlayer* p : allPlayers) {
         if (p) {
             p->updateMassDecay(0.016f); // 无论是人类还是AI，百万质量在这一步都会被非线性抽干！
@@ -270,7 +266,7 @@ void GameScene::paintEvent(QPaintEvent *event) {
     float camX = camera.getX();
     float camY = camera.getY();
 
-    // ✨ 确保使用的是当前最新计算出来的缩放比
+    // 这步当全局变量把
     //currentScale = camera.getScale();
 
     // A. 视口底层深空纯黑
@@ -317,10 +313,8 @@ void GameScene::paintEvent(QPaintEvent *event) {
 
     ejectedMassManager.draw(camX, camY, scrw, scrh, currentScale, painter);
 
-    // D. 绘制 UI 固顶层（屏幕坐标系，不受 currentScale 和相机平移影响）
 
-    // 2️⃣ ✨【文字管理器切入点 2：屏幕左上角状态看板】
-    // 它属于屏幕绝对UI，不随镜头放大缩小，直接传屏幕的宽和高
+    // 2️屏幕左上角状态看板】
     CharacterHandle::drawScreenHUD(painter, &player, width(), height());
 
     // E. 右上角 HUD 小地图强制置顶渲染（保持不变，小地图不需要变焦）
@@ -344,7 +338,6 @@ void GameScene::paintEvent(QPaintEvent *event) {
     painter.drawEllipse(QPointF(playerMiniX, playerMiniY), 5.0f, 5.0f);
 
     // 3️⃣ ✨【文字管理器切入点 3：游戏结束大结算提示】
-    // 必须放在最后渲染，确保它的半透明红黑色滤镜能把背后的地图、小地图全部盖住，实现完美的“全屏霸屏宣告”
     if (!player.getlifeStatue() || player.getlifeCount() <= 0) {
         CharacterHandle::drawGameOverSummary(painter, &player, width(), height());
     }

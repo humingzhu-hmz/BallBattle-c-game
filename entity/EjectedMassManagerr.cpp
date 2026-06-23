@@ -27,7 +27,6 @@ void EjectedMassManager::update(float deltaTime, float mapW, float mapH)
     for(EjectedMass* mass : masses)
     {
         if(mass)
-            // 🎯 把真实的地图总宽高传进去，代替以前无意义的 0, 0
             mass->update(deltaTime, mapW, mapH);
     }
 }

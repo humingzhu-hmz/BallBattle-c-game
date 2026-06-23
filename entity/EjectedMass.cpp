@@ -1,7 +1,7 @@
 #include "EjectedMass.h"
 #include <cmath>
 
-// 1. 构造函数：利用初始化列表将坐标、类型、质量、颜色透传给父类 Ball
+// 构造函数：利用初始化列表将坐标、类型、质量、颜色透传给父类 Ball
 EjectedMass::EjectedMass(float x, float y, float mass, QColor color, float vx, float vy)
     : Ball(x, y, TYPE_EJECTED_MASS, mass, color), vx(vx), vy(vy)
 {
@@ -10,7 +10,7 @@ EjectedMass::EjectedMass(float x, float y, float mass, QColor color, float vx, f
 // 2. 物理运动与边界锁死逻辑
 void EjectedMass::update(float deltaTime, float targetX, float targetY)
 {
-    // ✨ 这里的 targetX 和 targetY 我们可以灵活借用来传递地图的 mapw 和 maph！
+    // 这里的 targetX 和 targetY 我们可以灵活借用来传递地图的 mapw 和 maph！
     // 这样既不需要修改基类的虚函数签名，又能拿到边界值。
     float mapW = targetX;
     float mapH = targetY;
@@ -25,7 +25,7 @@ void EjectedMass::update(float deltaTime, float targetX, float targetY)
     float nextY = this->getY() + vy * deltaTime;
     float r = this->getRadius();
 
-    // C. 🎯【核心修复】：边缘碰撞拦截并锁死，同时将速度置零
+    // 吐出来的球如果碰到了边界把他置为0
     if (nextX < r) {
         nextX = r;
         vx = 0.0f;

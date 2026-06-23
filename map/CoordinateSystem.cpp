@@ -7,7 +7,7 @@ void CoordinateSystem::worldToScreen(float worldX, float worldY,
                                      float scale,
                                      float& screenX, float& screenY)
 {
-    // 💡 严格的全局线性变换公式：
+    // 线性变换公式：
     // 1. (worldX - camX) 算出物体偏离相机焦点的绝对世界距离
     // 2. 乘以 scale 让其在视觉上向屏幕中心成比例地“收缩”或“延展”
     // 3. 加上固定不变的屏幕物理中心偏移量 (screenW / 2.0f)，使其完美平移到画布正中央

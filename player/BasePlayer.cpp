@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm> // 记得在 cpp 顶部包含
 #include <QDebug>
+#include "../Music/MusicManager.h"
 #include "../operate/OperateManager//OperateManager.h"
 // ========================================================
 // ControllableBall（会动的球）实现
@@ -188,6 +189,7 @@ void BasePlayer::spawnPlayer(float mapWidth,float mapHeight)
     lifeStatue=true;
 
     myBalls.push_back(new ControllableBall(centerX,centerY,initMass,initSpeed,color));
+    Music::getInstance().playRespawn();
 }
 void BasePlayer::update(float deltaTime, float mouseWorldX, float mouseWorldY) {
     if (myBalls.empty()) return;

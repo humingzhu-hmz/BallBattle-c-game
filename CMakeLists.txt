@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 2. 自动寻找 Qt6 核心组件
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+# 🎯 ✨【修改位置】：在这里并列加上 Multimedia 模块
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia)
 
 # 3. 启用 Qt 特有的元对象编译器
 set(CMAKE_AUTOMOC ON)
@@ -29,4 +30,8 @@ list(FILTER SRC_FILES EXCLUDE REGEX ".*/build/.*")
 add_executable(Ballbattle ${SRC_FILES})
 
 # 7. 将你的程序与 Qt 库链接
-target_link_libraries(Ballbattle PRIVATE Qt6::Widgets)
+# 🎯 ✨【修改位置】：在这里把程序和 Qt6::Multimedia 绑死在一起
+target_link_libraries(Ballbattle PRIVATE
+    Qt6::Widgets
+    Qt6::Multimedia
+)

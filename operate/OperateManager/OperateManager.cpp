@@ -1,5 +1,6 @@
 #include "OperateManager.h"
-#include "../../player/Player.h"
+#include "../../player/BasePlayer.h"
+#include "../../Music/MusicManager.h"
 #include <cmath>
 #include <algorithm> // 确保引入 std::find
 #include "../../entity/EjectedMass.h"
@@ -87,6 +88,7 @@ void OperateManager::split(BasePlayer* player, float targetX, float targetY)
     if (!newBalls.empty()) {
         balls.insert(balls.end(), newBalls.begin(), newBalls.end());
     }
+    //Music::getInstance().playSplit();
 }
 
 void OperateManager::eject(BasePlayer* player, float targetX, float targetY, std::vector<EjectedMass*>& masses)
@@ -144,6 +146,7 @@ void OperateManager::eject(BasePlayer* player, float targetX, float targetY, std
                 )
             );
     }
+    //Music::getInstance().playEject();
 }
 
 // 🎯 ✨【这里是全新实现的静态合并逻辑】
@@ -220,4 +223,5 @@ void OperateManager::checkAndMerge(BasePlayer* player, float deltaTime)
             }
         }
     }
+    //Music::getInstance().playMerge();
 }

@@ -1,15 +1,17 @@
 #include "GameScene.h"
 #include "../collision/CollisionManager.h"
 #include "../player/CharacterHandle.h"
+#include "../Music/MusicManager.h"
 #include <QPainter>
 #include <QMouseEvent>
+#include <QDebug>
 #include <random>
 GameScene::GameScene(QWidget *parent)
     : Scene(parent),
     gameMap(5000.0f, 4000.0f,1240.0f,880.0f),
     spatialGrid(5000.0f, 4000.0f, 200.0f),
     player(2500.0f, 2000.0f,400.0f,400.0f,2,Qt::red,"Rain"),
-    aiManager(3),
+    aiManager(5),
     camera(2500.0f, 2000.0f,1.0f),
     mouseScreenX(960.0f),
     mouseScreenY(540.0f),
@@ -48,6 +50,13 @@ GameScene::GameScene(QWidget *parent)
     gameTimer = new QTimer(this);
     connect(gameTimer, &QTimer::timeout, this, &GameScene::gameLoop);
     gameTimer->start(16); // 60FPS 主循环
+    // 定位准确！这就是异步加载的典型“时差”问题：
+    // 构造函数执行 setSource 的时候，程序只是发出了一个“去读取文件”的通知，
+    // 还没等文件真正塞进内存，代码就已经跑到下一行的 playGameBegin() 了。
+    // 这时候因为 isLoaded() 还是 false，它就直接略过不播放了。
+    // 不能把加载文件写在这里
+    // Music::getInstance().playGameBegin();
+    qDebug()<<"using gamebegin";
 }
 GameScene::~GameScene() {
     delete gameTimer;
@@ -111,8 +120,17 @@ void GameScene::gameLoop() {
     // qDebug()<<camera.getX()<<camera.getY();
 
 
-    // 【手写纯数学转换】：屏幕坐标转世界坐标
+    Music::getInstance().playGameBegin();
+    // 屏幕坐标转世界坐标
     if (player.getlifeCount() <= 0) {
+        // 用一个局部静态变量作为“只放一次”的防重播锁
+        static bool hasPlayedGameOver = false;
+
+        if (!hasPlayedGameOver) {
+            Music::getInstance().stopGameBegin();
+            Music::getInstance().playGameOver(); // 💥 轰隆！在游戏冻结前，优雅地鸣枪谢幕
+            hasPlayedGameOver = true;            // 💥 锁死，下一帧再进来就不会重复播放了
+        }
         // 让游戏停在这一帧，只允许 paintEvent 刷新静态的 GAME OVER 画面
         return;
     }

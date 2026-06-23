@@ -7,7 +7,11 @@ void CharacterHandle::drawBallText(QPainter& painter, BasePlayer* player) {
     auto& balls = player->getBalls();
     if (balls.empty()) return;
 
-    Ball* mainBall = balls[0];
+    Ball* mainBall=balls[0];
+    for(Ball* b:balls)
+    {
+        if(b->getMass()>mainBall->getMass()) mainBall=b;
+    }
     if (!mainBall) return;
 
     painter.save();
@@ -15,14 +19,14 @@ void CharacterHandle::drawBallText(QPainter& painter, BasePlayer* player) {
     // 🎯 ✨【核心修改：完全解除字号限制，纯粹自由跟随质量/半径】
     // 这里的 0.3f 是字号系数。如果觉得球变大时字长得还不够快，可以调大到 0.35f 或 0.4f
     // 这样质量（半径）越大，字体就会无上限地跟着变大，绝对不固定！
-    int fontSize = std::max(15,static_cast<int>(mainBall->getRadius() * 0.5f));
+    int fontSize = std::max(12,static_cast<int>(mainBall->getRadius() * 0.5f));
 
     // 保底给 1 个像素，防止半径极小时出现 0 号字引发崩溃
     if (fontSize < 1) fontSize = 1;
 
     QFont font("Microsoft YaHei", fontSize, QFont::Bold);
     painter.setFont(font);
-    painter.setPen(Qt::white); // 纯白中文名
+    painter.setPen(Qt::black);
 
     float r = mainBall->getRadius();
     QRectF textRect(mainBall->getX() - r, mainBall->getY() - r, r * 2, r * 2);
